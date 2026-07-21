@@ -1,53 +1,73 @@
+print_buffer = 0.2;
+
 base_thickness = 4;
+base_wall_height = 50;
+base_wall_width = 30;
+base_mount_depth = 60;
+base_hole_width = 12;
+base_hole_depth = 40;
+base_hole_height = 2;
 
-base_width = 30; // Thickness of the base body
-base_height = 40;
-base_depth = 30; // Distance the base sticks out
+stand_height = 30;
+stand_depth = 8;
+stand_width = 3;
+peg_length = 10;
+peg_diameter = 2.8;
 
-hook_depth = 30;
+stopper_width = 3;
+stopper_height = 15;
 
-peg_length = 12; // Length of the 3mm peg
-peg_diameter = 2.8; // Tolerance adjusted for 3mm hole
-peg_height = 40;
-peg_base = 15;
+render_module = "base";
 
-union() {
-  translate([0, -3, -base_width / 2])
-    cube([base_thickness, base_height, base_width]);
-
+module base() {
   rotate([90, 0, 0])
-    translate([base_thickness, -base_width / 2, 0])
-      linear_extrude(3) {
-        polygon(
-          [
-            [0, 0],
-            [0, base_width],
-            [base_depth, base_width - peg_base],
-            [base_depth, 0],
-          ]
-        );
+    translate([-base_mount_depth / 2, -base_wall_width / 2, 0])
+      difference() {
+        union() {
+          rotate([0, -90, 0]) cube([base_wall_height, base_wall_width, base_thickness]);
+          cube([base_mount_depth, base_wall_width, base_thickness]);
+        }
+        translate([base_hole_depth, (base_wall_width - base_hole_width) / 2, base_thickness - base_hole_height]) cube([base_hole_width, base_hole_width, base_hole_height]);
       }
-
-  translate([base_depth + 1, 0, 0])
-    rotate([90, 90, 60])
-      linear_extrude(height=3) {
-        polygon(
-          [
-            [0, 0],
-            [peg_base, 0],
-            [peg_base, peg_height],
-            [peg_base - 3, peg_height],
-          ]
-        );
-      }
-
-  // The 3mm Peg at the tip
-  // Rotated to point upwards to fit into the bottom of the Gunpla
-  translate([
-      base_depth + 2 + sin(30)*peg_height,
-      peg_height - peg_length + 5,
-      -base_width / 2 + 1.5,
-    ])
-    rotate([-90, 0, 0])
-      cylinder(d=peg_diameter, h=peg_length, $fn=50);
 }
+
+module stand() {
+  rotate([0, -90, 0])
+    union() {
+      translate([0, -(base_hole_width - print_buffer) / 2, 0]) cube([base_hole_width - print_buffer, base_hole_width - print_buffer, base_hole_height]);
+
+      translate([peg_diameter / 2, 0, stand_height]) cylinder(d=peg_diameter, h=peg_length, $fn=50);
+
+      translate([0, -stand_width / 2, 0])
+        rotate([0, -90, -90])
+          linear_extrude(height=stand_width) {
+            polygon(
+              [
+                [0, 0],
+                [0, base_hole_width - print_buffer],
+                [stand_height, stand_width],
+                [stand_height, 0],
+              ]
+            );
+          }
+    }
+}
+
+module stopper() {
+  rotate([0, -90, 0])
+    union() {
+      translate([0, -(base_hole_width - print_buffer) / 2, 0]) cube([base_hole_width - print_buffer, base_hole_width - print_buffer, base_hole_height]);
+
+      translate([0, -stopper_width / 2, 0])
+        cube([stopper_width, stopper_width, stopper_height]);
+    }
+}
+
+if (render_module == "base") {
+  base();
+} else if (render_module == "stand") {
+  stand();
+} else if (render_module == "stopper") {
+  stopper();
+}
+
